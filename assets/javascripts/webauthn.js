@@ -116,6 +116,15 @@ async function authenticatePasskey() {
   const loginBtn = document.getElementById('passkey-login-btn');
   if (loginBtn) {
     loginBtn.addEventListener('click', authenticatePasskey);
+
+    // ログインフォーム内の送信ボタンの直後に移動
+    const submitBtn = document.querySelector('#login-form input[type=submit], form input[name=login]');
+    const passkeyDiv = document.getElementById('passkey-login');
+    if (submitBtn && passkeyDiv) {
+      submitBtn.closest('p, div, br')
+        ? submitBtn.parentNode.after(passkeyDiv)
+        : submitBtn.after(passkeyDiv);
+    }
   }
 
   const registerBtn = document.getElementById('passkey-register-btn');
