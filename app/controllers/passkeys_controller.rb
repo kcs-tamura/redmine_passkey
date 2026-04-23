@@ -16,7 +16,7 @@ class PasskeysController < ApplicationController
   def registration_options
     options = WebAuthn::Credential.options_for_create(
       user: {
-        id:           User.current.id.to_s,
+        id:           Base64.urlsafe_encode64(User.current.id.to_s, padding: false),
         name:         User.current.login,
         display_name: User.current.name
       },
