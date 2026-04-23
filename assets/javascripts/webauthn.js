@@ -6,9 +6,12 @@ function bufferToBase64url(buffer) {
 }
 
 function base64urlToBuffer(base64url) {
-  const padding = '='.repeat((4 - base64url.length % 4) % 4);
-  const base64  = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const binary  = atob(base64);
+  // 既存パディングを除去してから正しい量を付与
+  const stripped = base64url.replace(/=/g, '');
+  const padding  = '='.repeat((4 - stripped.length % 4) % 4);
+  const base64   = (stripped + padding).replace(/-/g, '+').replace(/_/g, '/');
+  console.debug('[passkey] base64urlToBuffer input:', base64url, '→', base64);
+  const binary   = atob(base64);
   return Uint8Array.from(binary, c => c.charCodeAt(0)).buffer;
 }
 
@@ -17,10 +20,19 @@ function csrfToken() {
 }
 
 async function registerPasskey(nickname) {
+  const token  = csrfToken();
+  console.debug('[passkey] csrf token:', token);
   const optRes = await fetch('/passkeys/registration/options', {
     method: 'POST',
-    headers: { 'X-CSRF-Token': csrfToken() }
+    headers: { 'X-CSRF-Token': token }
   });
+  console.debug('[passkey] registration/options status:', optRes.status, optRes.headers.get('content-type'));
+  if (!optRes.ok || !optRes.headers.get('content-type')?.includes('json')) {
+    const text = await optRes.text();
+    console.error('[passkey] unexpected response:', text.slice(0, 200));
+    alert('サーバーエラー: ' + optRes.status + '\n詳細はConsoleを確認してください');
+    return;
+  }
   const options = await optRes.json();
 
   options.challenge = base64urlToBuffer(options.challenge);
