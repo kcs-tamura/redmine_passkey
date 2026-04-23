@@ -1,10 +1,14 @@
-<div style="margin-top: 1em; text-align: center;">
-  <button type="button" id="passkey-login-btn" style="width: 100%;">
-    Passkeyでログイン
+<%= content_for :header_tags do %>
+  <%= stylesheet_link_tag 'passkey_login', plugin: 'redmine_passkey' %>
+  <%= javascript_include_tag 'webauthn', plugin: 'redmine_passkey' %>
+<% end %>
+
+<div id="passkey-login">
+  <button type="button" id="passkey-login-btn">
+    <%= l(:button_login_with_passkey) %>
   </button>
 </div>
 
-<%= javascript_include_tag 'webauthn', plugin: 'redmine_passkey' %>
 <script>
   document.getElementById('passkey-login-btn').addEventListener('click', function() {
     authenticatePasskey();
