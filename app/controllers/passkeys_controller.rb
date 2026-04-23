@@ -35,7 +35,7 @@ class PasskeysController < ApplicationController
       sign_count:  webauthn_credential.sign_count,
       nickname:    params[:nickname].presence || 'My Passkey'
     )
-    PasskeyMailer.passkey_added(User.current, passkey).deliver_now if notify?
+    PasskeyMailer.passkey_added(User.current, passkey).deliver_now if notify? rescue nil
     render json: { status: 'ok' }
   rescue WebAuthn::Error => e
     render json: { error: e.message }, status: :unprocessable_entity
@@ -69,7 +69,7 @@ class PasskeysController < ApplicationController
     credential = PasskeyCredential.find_by!(id: params[:id], user: User.current)
     nickname   = credential.nickname
     credential.destroy
-    PasskeyMailer.passkey_deleted(User.current, nickname).deliver_now if notify?
+    PasskeyMailer.passkey_deleted(User.current, nickname).deliver_now if notify? rescue nil
     redirect_to new_passkey_path, notice: l(:notice_passkey_deleted)
   end
 
