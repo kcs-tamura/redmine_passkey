@@ -1,4 +1,4 @@
-require_dependency 'redmine_passkey/hooks'
+require_relative 'lib/redmine_passkey/hooks'
 
 Redmine::Plugin.register :redmine_passkey do
   name        'Redmine Passkey'
