@@ -23,8 +23,9 @@ async function registerPasskey(nickname) {
   const token  = csrfToken();
   console.debug('[passkey] csrf token:', token);
   const optRes = await fetch('/passkeys/registration/options', {
-    method: 'POST',
-    headers: { 'X-CSRF-Token': token }
+    method:      'POST',
+    credentials: 'include',
+    headers:     { 'Accept': 'application/json', 'X-CSRF-Token': token }
   });
   console.debug('[passkey] registration/options status:', optRes.status, optRes.headers.get('content-type'));
   if (!optRes.ok || !optRes.headers.get('content-type')?.includes('json')) {
@@ -70,8 +71,9 @@ async function registerPasskey(nickname) {
 
 async function authenticatePasskey() {
   const optRes = await fetch('/passkeys/authentication/options', {
-    method: 'POST',
-    headers: { 'X-CSRF-Token': csrfToken() }
+    method:      'POST',
+    credentials: 'include',
+    headers:     { 'Accept': 'application/json', 'X-CSRF-Token': csrfToken() }
   });
   const options = await optRes.json();
   options.challenge = base64urlToBuffer(options.challenge);
