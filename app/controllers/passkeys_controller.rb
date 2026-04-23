@@ -2,6 +2,9 @@ class PasskeysController < ApplicationController
   # WebAuthnのchallenge機構がCSRF対策を担うためスキップ（Rails 7対応）
   skip_forgery_protection
 
+  # ログイン前に呼ばれる認証フローのエンドポイントはログイン必須チェックを除外
+  skip_before_action :check_if_login_required, only: %i[authentication_options authentication_verify]
+
   before_action :require_login, only: %i[new registration_options registration_verify destroy]
 
   # GET /passkeys/new
