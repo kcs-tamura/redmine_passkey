@@ -5,6 +5,7 @@ Redmine::Plugin.register :redmine_passkey do
   author      'Kitsune Creative Studio'
   description 'WebAuthn/Passkey authentication for Redmine'
   version     '0.1.0'
-  url         'https://trainfo.dev'
+  author_url 'https://www.kitsune-creative.studio/'
+  url         'https://github.com/kcs-tamura/redmine_passkey'
   requires_redmine version_or_higher: '4.2.0'
 end
