@@ -1,4 +1,4 @@
-// WebAuthn ユーティリティ
+// WebAuthn utilities for Redmine Passkey plugin
 
 function bufferToBase64url(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
@@ -6,36 +6,36 @@ function bufferToBase64url(buffer) {
 }
 
 function base64urlToBuffer(base64url) {
-  // 既存パディングを除去してから正しい量を付与
   const stripped = base64url.replace(/=/g, '');
   const padding  = '='.repeat((4 - stripped.length % 4) % 4);
   const base64   = (stripped + padding).replace(/-/g, '+').replace(/_/g, '/');
-  console.debug('[passkey] base64urlToBuffer input:', base64url, '→', base64);
-  const binary   = atob(base64);
-  return Uint8Array.from(binary, c => c.charCodeAt(0)).buffer;
+  return Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer;
 }
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
-async function registerPasskey(nickname) {
-  const token  = csrfToken();
-  console.debug('[passkey] csrf token:', token);
-  const optRes = await fetch('/passkeys/registration/options', {
-    method:      'POST',
+function jsonFetch(url, options = {}) {
+  return fetch(url, {
     credentials: 'include',
-    headers:     { 'Accept': 'application/json', 'X-CSRF-Token': token }
+    ...options,
+    headers: {
+      'Accept':       'application/json',
+      'X-CSRF-Token': csrfToken(),
+      ...options.headers
+    }
   });
-  console.debug('[passkey] registration/options status:', optRes.status, optRes.headers.get('content-type'));
-  if (!optRes.ok || !optRes.headers.get('content-type')?.includes('json')) {
-    const text = await optRes.text();
-    console.error('[passkey] unexpected response:', text.slice(0, 200));
-    alert('サーバーエラー: ' + optRes.status + '\n詳細はConsoleを確認してください');
+}
+
+async function registerPasskey(nickname) {
+  const optRes = await jsonFetch('/passkeys/registration/options', { method: 'POST' });
+  if (!optRes.ok) {
+    alert('Error: ' + optRes.status);
     return;
   }
-  const options = await optRes.json();
 
+  const options = await optRes.json();
   options.challenge = base64urlToBuffer(options.challenge);
   options.user.id   = base64urlToBuffer(options.user.id);
   if (options.excludeCredentials) {
@@ -44,11 +44,17 @@ async function registerPasskey(nickname) {
     }));
   }
 
-  const credential = await navigator.credentials.create({ publicKey: options });
+  let credential;
+  try {
+    credential = await navigator.credentials.create({ publicKey: options });
+  } catch (e) {
+    console.error('[passkey] create error:', e);
+    return;
+  }
 
-  const verifyRes = await fetch('/passkeys/registration/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
+  const verifyRes = await jsonFetch('/passkeys/registration/verify', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       nickname,
       id:       credential.id,
@@ -56,7 +62,7 @@ async function registerPasskey(nickname) {
       type:     credential.type,
       response: {
         clientDataJSON:    bufferToBase64url(credential.response.clientDataJSON),
-        attestationObject: bufferToBase64url(credential.response.attestationObject),
+        attestationObject: bufferToBase64url(credential.response.attestationObject)
       }
     })
   });
@@ -64,30 +70,33 @@ async function registerPasskey(nickname) {
   if (verifyRes.ok) {
     window.location.reload();
   } else {
-    const data = await verifyRes.json();
-    alert('登録失敗: ' + (data.error || '不明なエラー'));
+    const data = await verifyRes.json().catch(() => ({}));
+    alert('Registration failed: ' + (data.error || verifyRes.status));
   }
 }
 
 async function authenticatePasskey() {
-  const optRes = await fetch('/passkeys/authentication/options', {
-    method:      'POST',
-    credentials: 'include',
-    headers:     { 'Accept': 'application/json', 'X-CSRF-Token': csrfToken() }
-  });
+  const optRes = await jsonFetch('/passkeys/authentication/options', { method: 'POST' });
   if (!optRes.ok) {
     console.error('[passkey] authentication/options failed:', optRes.status);
-    alert('認証オプション取得に失敗しました: ' + optRes.status);
+    alert('Error: ' + optRes.status);
     return;
   }
+
   const options = await optRes.json();
   options.challenge = base64urlToBuffer(options.challenge);
 
-  const assertion = await navigator.credentials.get({ publicKey: options });
+  let assertion;
+  try {
+    assertion = await navigator.credentials.get({ publicKey: options });
+  } catch (e) {
+    console.error('[passkey] get error:', e);
+    return;
+  }
 
-  const verifyRes = await fetch('/passkeys/authentication/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
+  const verifyRes = await jsonFetch('/passkeys/authentication/verify', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       id:       assertion.id,
       rawId:    bufferToBase64url(assertion.rawId),
@@ -98,7 +107,7 @@ async function authenticatePasskey() {
         signature:         bufferToBase64url(assertion.response.signature),
         userHandle:        assertion.response.userHandle
                              ? bufferToBase64url(assertion.response.userHandle)
-                             : null,
+                             : null
       }
     })
   });
@@ -107,29 +116,25 @@ async function authenticatePasskey() {
     const data = await verifyRes.json();
     window.location.href = data.redirect || '/';
   } else {
-    alert('Passkey認証に失敗しました');
+    alert('Authentication failed');
   }
 }
 
-// スクリプトはボタンの直後に配置されるため、ここ実行時点でDOMに存在する
 (function () {
   const loginBtn = document.getElementById('passkey-login-btn');
   if (loginBtn) {
     loginBtn.addEventListener('click', authenticatePasskey);
 
-    // ログインフォーム内の送信ボタンの直後に移動
     const submitBtn = document.querySelector('#login-form input[type=submit], form input[name=login]');
     const passkeyDiv = document.getElementById('passkey-login');
     if (submitBtn && passkeyDiv) {
-      submitBtn.closest('p, div, br')
-        ? submitBtn.parentNode.after(passkeyDiv)
-        : submitBtn.after(passkeyDiv);
+      submitBtn.closest('p, div') ? submitBtn.parentNode.after(passkeyDiv) : submitBtn.after(passkeyDiv);
     }
   }
 
   const registerBtn = document.getElementById('passkey-register-btn');
   if (registerBtn) {
-    registerBtn.addEventListener('click', function () {
+    registerBtn.addEventListener('click', () => {
       const nickname = document.getElementById('passkey-nickname').value;
       registerPasskey(nickname);
     });

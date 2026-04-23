@@ -1,33 +1,33 @@
 # redmine_passkey
 
-Redmine用WebAuthn/Passkeyプラグイン。
+A Redmine plugin that adds WebAuthn/Passkey authentication.
 
-## 動作環境
+## Requirements
 
-- Redmine 4.2以上（Rails 7対応）
+- Redmine 4.2+ (Rails 7, tested on Redmine 6)
 - Ruby 3.x
-- MySQL/MariaDB（`users.id` が `int(11)` のRedmine標準スキーマ前提）
-- HTTPS必須（WebAuthn仕様。localhostは除く）
+- MySQL/MariaDB
+- HTTPS (required by WebAuthn spec; localhost is exempt)
 
-## インストール
+## Installation
 
 ```bash
-# 1. プラグインを配置
+# 1. Place the plugin under Redmine's plugins directory
 cp -r redmine_passkey /path/to/redmine/plugins/
 
-# 2. gem インストール
+# 2. Install dependencies
 bundle install
 
-# 3. マイグレーション
+# 3. Run database migration
 bundle exec rake redmine:plugins:migrate RAILS_ENV=production
 
-# 4. Redmine再起動
-touch /var/lib/redmine/tmp/restart.txt
+# 4. Restart Redmine
+touch /path/to/redmine/tmp/restart.txt
 ```
 
-## WebAuthn設定
+## Configuration
 
-`/var/lib/redmine/config/initializers/webauthn.rb` を作成：
+Create `config/initializers/webauthn.rb` inside your Redmine installation:
 
 ```ruby
 WebAuthn.configure do |config|
@@ -37,53 +37,57 @@ WebAuthn.configure do |config|
 end
 ```
 
-> `config.origin =` は webauthn gem 3.x で非推奨。`config.allowed_origins = [...]`（配列）を使うこと。
+## Features
 
-Coolify + Cloudflare Tunnel環境では `allowed_origins` と `rp_id` をTunnelのパブリックURLに設定する。
+- **Login page** — "Sign in with Passkey" button below the login form
+- **My account page** — Link to Passkey management
+- **Management page** (`/passkeys/new`) — Register, view, and delete passkeys
 
-## ハマりどころ
+---
 
-### `require_dependency` エラー（Rails 7）
+# redmine_passkey（日本語）
 
-Rails 7 + Zeitwerk環境では `require_dependency` が廃止されている。
-`init.rb` では `require_relative` を使う：
+RedmineにWebAuthn/Passkey認証を追加するプラグインです。
 
-```ruby
-# NG
-require_dependency 'redmine_passkey/hooks'
+## 動作環境
 
-# OK
-require_relative 'lib/redmine_passkey/hooks'
+- Redmine 4.2以上（Rails 7対応、Redmine 6で動作確認済み）
+- Ruby 3.x
+- MySQL/MariaDB
+- HTTPS必須（WebAuthn仕様、localhostは除く）
+
+## インストール
+
+```bash
+# 1. プラグインを配置
+cp -r redmine_passkey /path/to/redmine/plugins/
+
+# 2. gemインストール
+bundle install
+
+# 3. マイグレーション実行
+bundle exec rake redmine:plugins:migrate RAILS_ENV=production
+
+# 4. Redmine再起動
+touch /path/to/redmine/tmp/restart.txt
 ```
 
-### `config/routes.rb` のラッパー不要
+## 設定
 
-Redmineのプラグインローダーが `config/routes.rb` を自動でラップするため、
-`RedmineApp::Application.routes.draw do...end` を書くとRedmine全体のルーティングが壊れる（`/login` が404になる）。
-ルート定義のみを記述する：
+Redmineの `config/initializers/webauthn.rb` を作成：
 
 ```ruby
-# NG
-RedmineApp::Application.routes.draw do
-  scope '/passkeys' do ... end
+WebAuthn.configure do |config|
+  config.allowed_origins = ["https://your-redmine.example.com"]
+  config.rp_name         = "Redmine"
+  config.rp_id           = "your-redmine.example.com"
 end
-
-# OK
-scope '/passkeys' do
-  ...
-end
 ```
 
-### 外部キー型不一致（MySQL）
+> Coolify + Cloudflare Tunnel環境ではTunnelのパブリックURLを設定してください。
 
-Redmineの `users.id` は `int(11)`。`t.references` はデフォルトで `bigint` を生成するため外部キー制約が張れない。
-`t.integer` で明示する：
+## 機能
 
-```ruby
-# NG
-t.references :user, null: false, foreign_key: true
-
-# OK
-t.integer :user_id, null: false
-# テーブル作成後に add_foreign_key :passkey_credentials, :users
-```
+- **ログインページ** — ログインフォームの下に「Passkeyでログイン」ボタンを表示
+- **マイアカウントページ** — Passkey管理ページへのリンクを表示
+- **管理ページ** (`/passkeys/new`) — Passkeｙの登録・一覧・削除

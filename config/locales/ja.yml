@@ -1,2 +1,12 @@
 ja:
-  button_login_with_passkey: "Passkeyでログイン"
+  button_login_with_passkey:       "Passkeyでログイン"
+  button_register_passkey:         "Passkeyを登録"
+  button_delete_passkey:           "削除"
+  label_passkey_management:        "Passkey 管理"
+  label_new_passkey:               "新しいPasskeyを登録"
+  label_passkey_nickname_placeholder: "例: MacBook Touch ID"
+  label_passkey_registered_at:     "登録日時"
+  label_passkey_name:              "名前"
+  label_no_passkeys:               "登録済みのPasskeyはありません。"
+  label_my_passkey_link:           "Passkey管理（登録・削除）"
+  notice_passkey_deleted:          "Passkeyを削除しました。"

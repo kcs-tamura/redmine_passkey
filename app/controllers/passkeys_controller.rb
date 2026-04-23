@@ -1,18 +1,16 @@
 class PasskeysController < ApplicationController
-  # WebAuthnのchallenge機構がCSRF対策を担うためスキップ（Rails 7対応）
+  # WebAuthn challenge mechanism handles CSRF protection
   skip_forgery_protection
 
-  # ログイン前に呼ばれる認証フローのエンドポイントはログイン必須チェックを除外
+  # Authentication endpoints are called before login
   skip_before_action :check_if_login_required, only: %i[authentication_options authentication_verify]
 
   before_action :require_login, only: %i[new registration_options registration_verify destroy]
 
-  # GET /passkeys/new
   def new
     @credentials = PasskeyCredential.where(user: User.current)
   end
 
-  # POST /passkeys/registration/options
   def registration_options
     options = WebAuthn::Credential.options_for_create(
       user: {
@@ -26,7 +24,6 @@ class PasskeysController < ApplicationController
     render json: options.as_json
   end
 
-  # POST /passkeys/registration/verify
   def registration_verify
     webauthn_credential = WebAuthn::Credential.from_create(params)
     webauthn_credential.verify(session[:passkey_registration_challenge])
@@ -43,15 +40,12 @@ class PasskeysController < ApplicationController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  # POST /passkeys/authentication/options  (ログイン前でも呼ばれる)
   def authentication_options
     options = WebAuthn::Credential.options_for_get
     session[:passkey_authentication_challenge] = options.challenge
-
     render json: options.as_json
   end
 
-  # POST /passkeys/authentication/verify
   def authentication_verify
     webauthn_credential = WebAuthn::Credential.from_get(params)
     stored = PasskeyCredential.find_by_credential_id(webauthn_credential.raw_id)
@@ -59,22 +53,20 @@ class PasskeysController < ApplicationController
 
     webauthn_credential.verify(
       session[:passkey_authentication_challenge],
-      public_key:  stored.public_key,
-      sign_count:  stored.sign_count
+      public_key: stored.public_key,
+      sign_count: stored.sign_count
     )
     stored.update!(sign_count: webauthn_credential.sign_count)
 
-    # Redmineのセッション確立
     self.logged_user = stored.user
     render json: { status: 'ok', redirect: home_url }
   rescue WebAuthn::Error => e
     render json: { error: e.message }, status: :unauthorized
   end
 
-  # DELETE /passkeys/:id
   def destroy
     credential = PasskeyCredential.find_by!(id: params[:id], user: User.current)
     credential.destroy
-    redirect_to new_passkey_path, notice: 'Passkey を削除しました'
+    redirect_to new_passkey_path, notice: l(:notice_passkey_deleted)
   end
 end

@@ -6,7 +6,6 @@ class PasskeyCredential < ActiveRecord::Base
   validates :nickname,    presence: true
 
   def self.find_by_credential_id(credential_id)
-    # WebAuthnはBase64url形式でIDを返す
     find_by(external_id: Base64.urlsafe_encode64(credential_id, padding: false))
   end
 end

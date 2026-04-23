@@ -25,29 +25,29 @@ css:
     margin-bottom: 0.4em;
   }
 
-h2 Passkey 管理
+h2 = l(:label_passkey_management)
 
 - if @credentials.any?
   table.list
     thead
       tr
-        th 名前
-        th 登録日時
+        th = l(:label_passkey_name)
+        th = l(:label_passkey_registered_at)
         th
     tbody
       - @credentials.each do |cred|
         tr
           td = cred.nickname
           td = format_time(cred.created_at)
-          td = link_to '削除', passkey_path(cred), method: :delete, data: { confirm: '削除しますか？' }
+          td = link_to l(:button_delete_passkey), passkey_path(cred), method: :delete, data: { confirm: l(:text_are_you_sure) }
 - else
-  p 登録済みのPasskeyはありません。
+  p = l(:label_no_passkeys)
 
 hr
 
-h3 新しいPasskeyを登録
+h3 = l(:label_new_passkey)
 #passkey-register-form
-  input#passkey-nickname type="text" placeholder="例: MacBook Touch ID"
-  button#passkey-register-btn type="button" Passkeyを登録
+  input#passkey-nickname type="text" placeholder=l(:label_passkey_nickname_placeholder)
+  button#passkey-register-btn type="button" = l(:button_register_passkey)
 
 = javascript_include_tag 'webauthn', plugin: 'redmine_passkey'
