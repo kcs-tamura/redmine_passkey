@@ -1,4 +1,7 @@
 class PasskeysController < ApplicationController
+  # WebAuthnのchallenge機構がCSRF対策を担うためスキップ
+  skip_before_action :verify_authenticity_token
+
   before_action :require_login, only: %i[new registration_options registration_verify destroy]
 
   # GET /passkeys/new

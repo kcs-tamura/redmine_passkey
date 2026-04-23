@@ -75,6 +75,11 @@ async function authenticatePasskey() {
     credentials: 'include',
     headers:     { 'Accept': 'application/json', 'X-CSRF-Token': csrfToken() }
   });
+  if (!optRes.ok) {
+    console.error('[passkey] authentication/options failed:', optRes.status);
+    alert('認証オプション取得に失敗しました: ' + optRes.status);
+    return;
+  }
   const options = await optRes.json();
   options.challenge = base64urlToBuffer(options.challenge);
 
