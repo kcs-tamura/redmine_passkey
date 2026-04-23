@@ -29,7 +29,7 @@ function jsonFetch(url, options = {}) {
 }
 
 async function registerPasskey(nickname) {
-  const optRes = await jsonFetch('/passkeys/registration/options', { method: 'POST' });
+  const optRes = await jsonFetch('/passkeys/reg_options', { method: 'POST' });
   if (!optRes.ok) {
     alert('Error: ' + optRes.status);
     return;
@@ -52,7 +52,7 @@ async function registerPasskey(nickname) {
     return;
   }
 
-  const verifyRes = await jsonFetch('/passkeys/registration/verify', {
+  const verifyRes = await jsonFetch('/passkeys/reg_verify', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -76,9 +76,9 @@ async function registerPasskey(nickname) {
 }
 
 async function authenticatePasskey() {
-  const optRes = await jsonFetch('/passkeys/authentication/options', { method: 'POST' });
+  const optRes = await jsonFetch('/passkeys/auth_options', { method: 'POST' });
   if (!optRes.ok) {
-    console.error('[passkey] authentication/options failed:', optRes.status);
+    console.error('[passkey] auth_options failed:', optRes.status);
     alert('Error: ' + optRes.status);
     return;
   }
@@ -94,7 +94,7 @@ async function authenticatePasskey() {
     return;
   }
 
-  const verifyRes = await jsonFetch('/passkeys/authentication/verify', {
+  const verifyRes = await jsonFetch('/passkeys/auth_verify', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

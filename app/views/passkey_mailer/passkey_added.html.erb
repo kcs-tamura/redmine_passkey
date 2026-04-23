@@ -1,0 +1,7 @@
+<p><%= l(:mail_body_passkey_added, user: @user.name, nickname: @passkey.nickname).gsub("\n", '<br>').html_safe %></p>
+
+<table>
+  <tr><th><%= l(:field_login) %></th><td><%= @user.login %></td></tr>
+  <tr><th>Passkey</th><td><%= @passkey.nickname %></td></tr>
+  <tr><th><%= l(:label_registered_on) %></th><td><%= format_time(@passkey.created_at) %></td></tr>
+</table>

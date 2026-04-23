@@ -4,8 +4,9 @@ Redmine::Plugin.register :redmine_passkey do
   name        'Redmine Passkey'
   author      'Kitsune Creative Studio'
   description 'WebAuthn/Passkey authentication for Redmine'
-  version     '1.0.1'
+  version     '1.1.0'
   author_url 'https://www.kitsune-creative.studio/'
   url         'https://github.com/kcs-tamura/redmine_passkey'
   requires_redmine version_or_higher: '4.2.0'
+  settings default: { 'send_notification' => '0' }, partial: 'settings/passkey_settings'
 end
