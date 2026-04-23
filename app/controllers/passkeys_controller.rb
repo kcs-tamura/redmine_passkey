@@ -28,13 +28,14 @@ class PasskeysController < ApplicationController
     webauthn_credential = WebAuthn::Credential.from_create(params)
     webauthn_credential.verify(session[:passkey_registration_challenge])
 
-    PasskeyCredential.create!(
+    passkey = PasskeyCredential.create!(
       user:        User.current,
       external_id: Base64.urlsafe_encode64(webauthn_credential.raw_id, padding: false),
       public_key:  webauthn_credential.public_key,
       sign_count:  webauthn_credential.sign_count,
       nickname:    params[:nickname].presence || 'My Passkey'
     )
+    PasskeyMailer.passkey_added(User.current, passkey).deliver_later if notify?
     render json: { status: 'ok' }
   rescue WebAuthn::Error => e
     render json: { error: e.message }, status: :unprocessable_entity
@@ -66,7 +67,15 @@ class PasskeysController < ApplicationController
 
   def destroy
     credential = PasskeyCredential.find_by!(id: params[:id], user: User.current)
+    nickname   = credential.nickname
     credential.destroy
+    PasskeyMailer.passkey_deleted(User.current, nickname).deliver_later if notify?
     redirect_to new_passkey_path, notice: l(:notice_passkey_deleted)
+  end
+
+  private
+
+  def notify?
+    Setting.plugin_redmine_passkey['send_notification'] == '1'
   end
 end

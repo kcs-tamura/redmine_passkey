@@ -1,0 +1,4 @@
+p
+  = label_tag 'settings[send_notification]' do
+    = check_box_tag 'settings[send_notification]', '1', @settings['send_notification'] == '1'
+    = l(:setting_passkey_send_notification)
