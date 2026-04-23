@@ -23,7 +23,7 @@ class PasskeysController < ApplicationController
       exclude: PasskeyCredential.where(user: User.current).pluck(:external_id)
     )
     session[:passkey_registration_challenge] = options.challenge
-    render json: options
+    render json: options.as_json
   end
 
   # POST /passkeys/registration/verify
@@ -47,7 +47,8 @@ class PasskeysController < ApplicationController
   def authentication_options
     options = WebAuthn::Credential.options_for_get
     session[:passkey_authentication_challenge] = options.challenge
-    render json: options
+
+    render json: options.as_json
   end
 
   # POST /passkeys/authentication/verify
