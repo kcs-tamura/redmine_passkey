@@ -8,4 +8,5 @@ Redmine::Plugin.register :redmine_passkey do
   author_url 'https://www.kitsune-creative.studio/'
   url         'https://github.com/kcs-tamura/redmine_passkey'
   requires_redmine version_or_higher: '4.2.0'
+  settings default: { 'send_notification' => '0' }, partial: 'settings/passkey_settings'
 end

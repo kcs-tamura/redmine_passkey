@@ -1,0 +1,5 @@
+<%= l(:mail_body_passkey_added, user: @user.name, nickname: @passkey.nickname) %>
+
+<%= l(:field_login) %>: <%= @user.login %>
+Passkey: <%= @passkey.nickname %>
+<%= l(:label_registered_on) %>: <%= format_time(@passkey.created_at) %>
