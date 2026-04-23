@@ -1,13 +1,15 @@
 #passkey-login {
-  margin-top: 0.6em;
-  text-align: center;
+  margin-top: 0.8em;
 }
 
+#login-form #passkey-login button,
 #passkey-login button {
+  display: block;
   width: 100%;
-  padding: 0.5em 1em;
-  font-size: 0.95em;
+  padding: 6px 16px;
+  font-size: 1em;
+  font-family: inherit;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 3px;
   box-sizing: border-box;
 }
