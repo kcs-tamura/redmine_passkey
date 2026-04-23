@@ -1,4 +1,8 @@
 css:
+  #passkey-register-form {
+    max-width: 400px;
+    margin-top: 0.5em;
+  }
   #passkey-register-btn {
     display: block;
     width: 100%;
@@ -42,7 +46,8 @@ h2 Passkey 管理
 hr
 
 h3 新しいPasskeyを登録
-input#passkey-nickname type="text" placeholder="例: MacBook Touch ID"
-button#passkey-register-btn type="button" Passkeyを登録
+#passkey-register-form
+  input#passkey-nickname type="text" placeholder="例: MacBook Touch ID"
+  button#passkey-register-btn type="button" Passkeyを登録
 
 = javascript_include_tag 'webauthn', plugin: 'redmine_passkey'
