@@ -6,7 +6,7 @@ A Redmine plugin that adds WebAuthn/Passkey authentication.
 
 - Redmine 4.2+ (Rails 7, tested on Redmine 6)
 - Ruby 3.x
-- MySQL/MariaDB
+- PostgreSQL, MySQL/MariaDB, or SQLite (any database supported by Redmine)
 - HTTPS (required by WebAuthn spec; localhost is exempt)
 
 ## Installation
@@ -53,7 +53,7 @@ RedmineにWebAuthn/Passkey認証を追加するプラグインです。
 
 - Redmine 4.2以上（Rails 7対応、Redmine 6で動作確認済み）
 - Ruby 3.x
-- MySQL/MariaDB
+- PostgreSQL, MySQL/MariaDB, or SQLite (any database supported by Redmine)
 - HTTPS必須（WebAuthn仕様、localhostは除く）
 
 ## インストール
