@@ -1,7 +1,12 @@
 <div style="margin-top: 1em; text-align: center;">
-  <button type="button" onclick="authenticatePasskey()" style="width: 100%;">
+  <button type="button" id="passkey-login-btn" style="width: 100%;">
     Passkeyでログイン
   </button>
 </div>
 
 <%= javascript_include_tag 'webauthn', plugin: 'redmine_passkey' %>
+<script>
+  document.getElementById('passkey-login-btn').addEventListener('click', function() {
+    authenticatePasskey();
+  });
+</script>

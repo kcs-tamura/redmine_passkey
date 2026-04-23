@@ -7,5 +7,13 @@ module RedminePasskey
         locals:  context
       })
     end
+
+    # マイアカウントページにPasskey管理リンクを追加
+    def view_my_account_preferences(context = {})
+      context[:controller].send(:render_to_string, {
+        partial: 'passkeys/my_account_link',
+        locals:  context
+      })
+    end
   end
 end
