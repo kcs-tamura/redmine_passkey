@@ -6,8 +6,9 @@ function bufferToBase64url(buffer) {
 }
 
 function base64urlToBuffer(base64url) {
-  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const binary = atob(base64);
+  const padding = '='.repeat((4 - base64url.length % 4) % 4);
+  const base64  = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const binary  = atob(base64);
   return Uint8Array.from(binary, c => c.charCodeAt(0)).buffer;
 }
 
@@ -91,8 +92,8 @@ async function authenticatePasskey() {
   }
 }
 
-// イベントリスナーをすべてここで設定（CSP対応・onclick属性不使用）
-document.addEventListener('DOMContentLoaded', function () {
+// スクリプトはボタンの直後に配置されるため、ここ実行時点でDOMに存在する
+(function () {
   const loginBtn = document.getElementById('passkey-login-btn');
   if (loginBtn) {
     loginBtn.addEventListener('click', authenticatePasskey);
@@ -105,4 +106,4 @@ document.addEventListener('DOMContentLoaded', function () {
       registerPasskey(nickname);
     });
   }
-});
+})();

@@ -1,7 +1,8 @@
 - content_for :header_tags do
   = stylesheet_link_tag 'passkey_login', plugin: 'redmine_passkey'
-  = javascript_include_tag 'webauthn', plugin: 'redmine_passkey'
 
 #passkey-login
   button#passkey-login-btn type="button"
     = l(:button_login_with_passkey)
+
+= javascript_include_tag 'webauthn', plugin: 'redmine_passkey'
