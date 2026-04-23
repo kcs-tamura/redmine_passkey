@@ -1,0 +1,25 @@
+h2 Passkey 管理
+
+- if @credentials.any?
+  table.list
+    thead
+      tr
+        th 名前
+        th 登録日時
+        th
+    tbody
+      - @credentials.each do |cred|
+        tr
+          td = cred.nickname
+          td = format_time(cred.created_at)
+          td = link_to '削除', passkey_path(cred), method: :delete, data: { confirm: '削除しますか？' }
+- else
+  p 登録済みのPasskeyはありません。
+
+hr
+
+h3 新しいPasskeyを登録
+input#passkey-nickname type="text" placeholder="例: MacBook Touch ID"
+button#passkey-register-btn type="button" Passkeyを登録
+
+= javascript_include_tag 'webauthn', plugin: 'redmine_passkey'

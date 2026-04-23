@@ -1,5 +1,4 @@
 // WebAuthn ユーティリティ
-// Base64url <-> ArrayBuffer 変換
 
 function bufferToBase64url(buffer) {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)))
@@ -12,13 +11,17 @@ function base64urlToBuffer(base64url) {
   return Uint8Array.from(binary, c => c.charCodeAt(0)).buffer;
 }
 
-// --- 登録フロー ---
+function csrfToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
 async function registerPasskey(nickname) {
-  // 1. サーバーからオプション取得
-  const optRes = await fetch('/passkeys/registration/options', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken() } });
+  const optRes = await fetch('/passkeys/registration/options', {
+    method: 'POST',
+    headers: { 'X-CSRF-Token': csrfToken() }
+  });
   const options = await optRes.json();
 
-  // ArrayBuffer変換
   options.challenge = base64urlToBuffer(options.challenge);
   options.user.id   = base64urlToBuffer(options.user.id);
   if (options.excludeCredentials) {
@@ -27,10 +30,8 @@ async function registerPasskey(nickname) {
     }));
   }
 
-  // 2. ブラウザにPasskey作成を要求
   const credential = await navigator.credentials.create({ publicKey: options });
 
-  // 3. サーバーへ送信
   const verifyRes = await fetch('/passkeys/registration/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken() },
@@ -45,12 +46,20 @@ async function registerPasskey(nickname) {
       }
     })
   });
-  return verifyRes.ok;
+
+  if (verifyRes.ok) {
+    window.location.reload();
+  } else {
+    const data = await verifyRes.json();
+    alert('登録失敗: ' + (data.error || '不明なエラー'));
+  }
 }
 
-// --- 認証フロー ---
 async function authenticatePasskey() {
-  const optRes = await fetch('/passkeys/authentication/options', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken() } });
+  const optRes = await fetch('/passkeys/authentication/options', {
+    method: 'POST',
+    headers: { 'X-CSRF-Token': csrfToken() }
+  });
   const options = await optRes.json();
   options.challenge = base64urlToBuffer(options.challenge);
 
@@ -67,7 +76,9 @@ async function authenticatePasskey() {
         clientDataJSON:    bufferToBase64url(assertion.response.clientDataJSON),
         authenticatorData: bufferToBase64url(assertion.response.authenticatorData),
         signature:         bufferToBase64url(assertion.response.signature),
-        userHandle:        assertion.response.userHandle ? bufferToBase64url(assertion.response.userHandle) : null,
+        userHandle:        assertion.response.userHandle
+                             ? bufferToBase64url(assertion.response.userHandle)
+                             : null,
       }
     })
   });
@@ -80,6 +91,18 @@ async function authenticatePasskey() {
   }
 }
 
-function csrfToken() {
-  return document.querySelector('meta[name="csrf-token"]')?.content || '';
-}
+// イベントリスナーをすべてここで設定（CSP対応・onclick属性不使用）
+document.addEventListener('DOMContentLoaded', function () {
+  const loginBtn = document.getElementById('passkey-login-btn');
+  if (loginBtn) {
+    loginBtn.addEventListener('click', authenticatePasskey);
+  }
+
+  const registerBtn = document.getElementById('passkey-register-btn');
+  if (registerBtn) {
+    registerBtn.addEventListener('click', function () {
+      const nickname = document.getElementById('passkey-nickname').value;
+      registerPasskey(nickname);
+    });
+  }
+});
