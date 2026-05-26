@@ -1,4 +1,4 @@
-<p><%= l(:mail_body_passkey_deleted, user: @user.name, nickname: @nickname).gsub("\n", '<br>').html_safe %></p>
+<%= simple_format(l(:mail_body_passkey_deleted, user: @user.name, nickname: @nickname)) %>
 
 <table>
   <tr><th><%= l(:field_login) %></th><td><%= @user.login %></td></tr>

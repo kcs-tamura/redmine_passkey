@@ -1,6 +1,8 @@
 class PasskeysController < ApplicationController
-  # WebAuthn challenge mechanism handles CSRF protection
-  skip_forgery_protection
+  # WebAuthn challenge proves the origin for these endpoints; CSRF token
+  # protection (X-CSRF-Token header from JS) still applies to destroy.
+  skip_forgery_protection only: %i[registration_options registration_verify
+                                   authentication_options authentication_verify]
 
   # Authentication endpoints are called before login
   skip_before_action :check_if_login_required, only: %i[authentication_options authentication_verify]
@@ -35,7 +37,7 @@ class PasskeysController < ApplicationController
       sign_count:  webauthn_credential.sign_count,
       nickname:    params[:nickname].presence || 'My Passkey'
     )
-    PasskeyMailer.passkey_added(User.current, passkey).deliver_now if notify? rescue nil
+    notify_user { PasskeyMailer.passkey_added(User.current, passkey).deliver_now }
     render json: { status: 'ok' }
   rescue WebAuthn::Error => e
     render json: { error: e.message }, status: :unprocessable_entity
@@ -69,7 +71,7 @@ class PasskeysController < ApplicationController
     credential = PasskeyCredential.find_by!(id: params[:id], user: User.current)
     nickname   = credential.nickname
     credential.destroy
-    PasskeyMailer.passkey_deleted(User.current, nickname).deliver_now if notify? rescue nil
+    notify_user { PasskeyMailer.passkey_deleted(User.current, nickname).deliver_now }
     redirect_to new_passkey_path, notice: l(:notice_passkey_deleted)
   end
 
@@ -77,5 +79,12 @@ class PasskeysController < ApplicationController
 
   def notify?
     Setting.plugin_redmine_passkey['send_notification'] == '1'
+  end
+
+  def notify_user
+    return unless notify?
+    yield
+  rescue => e
+    Rails.logger.error "[redmine_passkey] mailer error: #{e.class}: #{e.message}"
   end
 end
