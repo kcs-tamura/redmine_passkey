@@ -121,6 +121,9 @@ async function authenticatePasskey() {
 }
 
 (function () {
+  if (window.__passkeyInitialized) return;
+  window.__passkeyInitialized = true;
+
   const loginBtn = document.getElementById('passkey-login-btn');
   if (loginBtn) {
     loginBtn.addEventListener('click', authenticatePasskey);
