@@ -20,6 +20,15 @@ class PasskeysController < ApplicationController
         name:         User.current.login,
         display_name: User.current.name
       },
+      # Sign-in calls options_for_get with an empty allowCredentials list
+      # (username-less flow), which only surfaces discoverable credentials.
+      # Without this, authenticators may create non-discoverable passkeys that
+      # register fine but are never offered at login.
+      authenticator_selection: {
+        resident_key:         'required',
+        require_resident_key: true,
+        user_verification:    'preferred'
+      },
       exclude: PasskeyCredential.where(user: User.current).pluck(:external_id)
     )
     session[:passkey_registration_challenge] = options.challenge
